@@ -3,6 +3,7 @@ package Recommendation;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -22,32 +23,33 @@ import org.apache.hadoop.mapred.TextOutputFormat;
 
 public class DataPre {
 
-    public static class Step1_ToItemPreMapper extends MapReduceBase implements Mapper<Object, Text, IntWritable, Text> {
-        private final static IntWritable k = new IntWritable();
+    public static class DataPreMapper extends MapReduceBase implements Mapper<Object, Text, Text, Text> {
+        private final static Text k = new Text();
         private final static Text v = new Text();
 
         @Override
-        public void map(Object key, Text value, OutputCollector<IntWritable, Text> output, Reporter reporter) throws IOException {
-            String[] tokens = Recommend.DELIMITER.split(value.toString());
-            int userID = Integer.parseInt(tokens[0]);
-            String itemID = tokens[1];
-            String pref = tokens[2];
-            k.set(userID);
-            v.set(itemID + ":" + pref);
+        public void map(Object key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
+            String line = value.toString();
+            StringTokenizer token = new StringTokenizer(line, ",", false);
+            String userId = token.nextToken();
+            String movieId = token.nextToken();
+            int rating = Integer.parseInt(token.nextToken());
+            k.set(userId);
+            v.set(movieId + ":" + rating);
             output.collect(k, v);
         }
     }
 
-    public static class Step1_ToUserVectorReducer extends MapReduceBase implements Reducer<IntWritable, Text, IntWritable, Text> {
+    public static class DataPreReducer extends MapReduceBase implements Reducer<Text, Text, Text, Text> {
         private final static Text v = new Text();
 
         @Override
-        public void reduce(IntWritable key, Iterator<Text> values, OutputCollector<IntWritable, Text> output, Reporter reporter) throws IOException {
-            StringBuilder sb = new StringBuilder();
+        public void reduce(Text key, Iterator<Text> values, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
+            StringBuilder movieList = new StringBuilder();
             while (values.hasNext()) {
-                sb.append("," + values.next());
+            	movieList.append("," + values.next());
             }
-            v.set(sb.toString().replaceFirst(",", ""));
+            v.set(movieList.toString().replaceFirst(",", ""));
             output.collect(key, v);
         }
     }
