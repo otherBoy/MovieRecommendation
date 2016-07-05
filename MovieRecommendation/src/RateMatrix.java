@@ -10,16 +10,16 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-        
+
 public class RateMatrix {
         
-	public static class Map extends Mapper<Object, Text, Text, Text> {
+	public static class RateMatrixMap extends Mapper<Object, Text, Text, Text> {
 	    private final static Text k = new Text();
 	    private Text v = new Text();
         
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();
-			StringTokenizer token = new StringTokenizer(line, ",", true);
+			StringTokenizer token = new StringTokenizer(line, ",", false);
         
 			String userId  = token.nextToken();
 			String movieId = token.nextToken();
@@ -30,4 +30,19 @@ public class RateMatrix {
 			context.write(k, v);
 		}
 	}
+	
+	public class RateMatrixReducer extends Reducer<Text, Text, Text, Text>{
+		
+		public void reduce(Text key, Iterable<Text> values,Context context) throws IOException, InterruptedException{
+			
+			StringBuilder userRatings = new StringBuilder();
+			
+			for(Text value : values) {
+				userRatings.append(value.toString());
+			}
+			
+			context.write(key, new Text(userRatings.toString()));
+		}
+	}
+	
  } 
