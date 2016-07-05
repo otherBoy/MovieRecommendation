@@ -17,10 +17,11 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-public class Recommender {
+public class MultiplyMatrix {
 
-    public static class RecommenderMapper extends Mapper<LongWritable, Text, Text, Text> {
+    public static class MultiplyMatrixMapper extends Mapper<LongWritable, Text, Text, Text> {
 
+        @Override
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
             String[] tokens = Recommend.DELIMITER.split(values.toString());
             Text k = new Text(tokens[0]);
@@ -85,5 +86,4 @@ public class Recommender {
 
         job.waitForCompletion(true);
     }
-
 }

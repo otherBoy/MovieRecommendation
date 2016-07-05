@@ -1,56 +1,44 @@
 package Recommendation;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class DataPre {
 
-    public static class DataPreMapper extends MapReduceBase implements Mapper<Object, Text, Text, Text> {
+    public static class DataPreMapper extends Mapper<Object, Text, Text, Text> {
         private final static Text k = new Text();
         private final static Text v = new Text();
 
-        @Override
-        public void map(Object key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-            String line = value.toString();
-            StringTokenizer token = new StringTokenizer(line, ",", false);
-            String userId = token.nextToken();
-            String movieId = token.nextToken();
-            int rating = Integer.parseInt(token.nextToken());
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+            String[] tokens = Main.DELIMITER.split(value.toString());
+            String userId  = tokens[0];
+            String movieId = tokens[1];
+            int rating     = Integer.parseInt(tokens[2]);
             k.set(userId);
             v.set(movieId + ":" + rating);
-            output.collect(k, v);
+            context.write(k, v);
         }
     }
 
-    public static class DataPreReducer extends MapReduceBase implements Reducer<Text, Text, Text, Text> {
+    public static class DataPreReducer extends Reducer<Text, Text, Text, Text> {
         private final static Text v = new Text();
 
-        @Override
-        public void reduce(Text key, Iterator<Text> values, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
+        public void reduce(Text key, Iterator<Text> values, Context context) throws IOException, InterruptedException {
             StringBuilder movieList = new StringBuilder();
             while (values.hasNext()) {
             	movieList.append("," + values.next());
             }
             v.set(movieList.toString().replaceFirst(",", ""));
-            output.collect(key, v);
+            context.write(key, v);
         }
     }
 
