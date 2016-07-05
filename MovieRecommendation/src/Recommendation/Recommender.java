@@ -22,7 +22,7 @@ public class Recommender {
     public static class RecommenderMapper extends Mapper<LongWritable, Text, Text, Text> {
 
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
-            String[] tokens = Recommend.DELIMITER.split(values.toString());
+            String[] tokens = Main.DELIMITER.split(values.toString());
             Text k = new Text(tokens[0]);
             Text v = new Text(tokens[1]+","+tokens[2]);
             context.write(k, v);
@@ -38,7 +38,7 @@ public class Recommender {
             
             for (Text line : values) {
                 System.out.println(line.toString());
-                String[] tokens = Recommend.DELIMITER.split(line.toString());
+                String[] tokens = Main.DELIMITER.split(line.toString());
                 String itemID = tokens[0];
                 Double score = Double.parseDouble(tokens[1]);
                 

@@ -12,6 +12,10 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
+/* Data Preprocessing.
+ * The input data is (userId, movieId, rating).
+ * After this mapreduce, the output data(key, value) will be (userId, [movieA:rating,movieB:rating]).
+ * One record contains a key(userId) and a value(all of movies and rating which the user had watched and marked). */
 public class DataPre {
 
     public static class DataPreMapper extends Mapper<Object, Text, Text, Text> {
@@ -19,10 +23,11 @@ public class DataPre {
         private final static Text v = new Text();
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+        	// split the input data
             String[] tokens = Main.DELIMITER.split(value.toString());
-            String userId  = tokens[0];
+            String userId = tokens[0];
             String movieId = tokens[1];
-            int rating     = Integer.parseInt(tokens[2]);
+            int rating = Integer.parseInt(tokens[2]);
             k.set(userId);
             v.set(movieId + ":" + rating);
             context.write(k, v);
